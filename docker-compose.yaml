@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+
+  db:
+    build: db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db:/code/db
+
+  app:
+    build: app
+    environment:
+      - PYTHONUNBUFFERED=0
+    volumes:
+      - ./app:/code/app
+    ports:
+      - "80:80"
