@@ -1,41 +1,57 @@
 import streamlit as st
-import requests
-
-BACKEND_URL = "http://app:80"
-
-
-def show_menu():
-    response = requests.get(f"{BACKEND_URL}/guest/menu")
-    if response.status_code == 200:
-        menu = response.json()
-
-        st.write("MENU:")
-        st.table(menu)
-    else:
-        st.error("Error getting menu")
-
-def make_order():
-
-    st.title("Making order")
-
-    st.text("Restaurant: Welcome! What can I get you?")
-
-    user_input = st.text_input("You:", "")
-    if "add" in user_input:
-        st.text("Would you like anything else?")
-    elif "remove" in user_input:
-        st.text("Would you like anything else?")
 
 def main():
-    st.title("Welcome to our restaurant")
+    st.title("Chat Interface")
 
-    options = ["menu", "order"]
-    selected_option = st.selectbox("Select an option", options)
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-    if selected_option == "menu":
-        show_menu()
-    elif selected_option == "order":
-        make_order()
+    if 'something' not in st.session_state:
+        st.session_state.something = ''
+
+
+
+    chat_style = """
+        <style>
+            .chat-log {
+                height: 300px;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column-reverse;
+            }
+        </style>
+    """
+    st.markdown(chat_style, unsafe_allow_html=True)
+
+    # Display the chat log
+    chat_log = "<br>".join(st.session_state.messages)
+    chat_log_element = st.empty()  # Create an empty element to update the chat log
+    chat_log_element.markdown(f"<div class='chat-log'>{chat_log}</div>", unsafe_allow_html=True)
+
+
+
+    def submit():
+        handle_message(st.session_state.widget)
+        st.session_state.something = st.session_state.widget
+        st.session_state.widget = ''
+
+
+    st.text_input(key='widget', on_change=submit, label = "user input", label_visibility="hidden", placeholder="type here")
+
+
+
+    def handle_message(message):
+        user_message = f"You: {message}"
+        bot_response = generate_bot_response(message)
+
+        st.session_state.messages.append(user_message)
+        st.session_state.messages.append(bot_response)
+
+        updated_chat_log = "<br>".join(st.session_state.messages)
+        chat_log_element.markdown(f"<div class='chat-log'>{updated_chat_log}</div>", unsafe_allow_html=True)
+
+def generate_bot_response(user_input):
+    return "Bot response to " + user_input
 
 if __name__ == "__main__":
     main()
