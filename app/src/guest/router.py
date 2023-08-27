@@ -4,6 +4,10 @@ from app.src.models.order import Order
 
 guest = APIRouter(prefix="/guest")
 
+@guest.get("")
+def root():
+    return {"message":"Welcome to our restaurant"}
+
 
 @guest.get("/menu")
 async def get_menu():

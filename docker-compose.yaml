@@ -1,7 +1,6 @@
 version: '3'
 
 services:
-
   db:
     build: db
     ports:
@@ -17,3 +16,14 @@ services:
       - ./app:/code/app
     ports:
       - "80:80"
+    depends_on:
+      - db
+
+  frontend:
+    build: front
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./front:/code/front
+    depends_on:
+      - app

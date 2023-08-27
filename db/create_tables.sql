@@ -10,6 +10,7 @@ FROM '/code/db/menu.csv'
 WITH (FORMAT csv, HEADER true);
 
 
+-- create column for saving messages
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     time_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
