@@ -1,11 +1,8 @@
-from typing import List
-
 from app.src.guest.utils import GuestUtils
 from app.src.models.item import Item
-from app.src.models.order import Order
+
 
 class GuestService:
-
     @staticmethod
     async def get_menu():
         return await GuestUtils.get_menu()
