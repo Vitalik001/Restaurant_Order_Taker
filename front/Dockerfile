@@ -1,6 +1,6 @@
 FROM python:3.9
 
-WORKDIR /code
+WORKDIR /code/front
 
 COPY requirements.txt /code/front/requirements.txt
 
@@ -10,4 +10,4 @@ COPY . /code/front
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "front/main.py"]
+CMD ["streamlit", "run", "main.py"]
