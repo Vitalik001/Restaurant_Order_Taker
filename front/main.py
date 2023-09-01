@@ -4,7 +4,7 @@ from admin.admin import admin_page
 import streamlit as st
 
 
-def main():
+def order():
     upper_bar = st.container()
     with upper_bar:
         st.title("Seafood place")
@@ -28,4 +28,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    order()
