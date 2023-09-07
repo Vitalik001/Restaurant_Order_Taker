@@ -15,7 +15,7 @@ def order():
         )
 
         page = st.radio(
-            options=["Admin Page", "Guest Page"],
+            options=["Guest Page", "Admin Page"],
             label="Page Choice",
             format_func=lambda x: x,
             label_visibility="hidden",
