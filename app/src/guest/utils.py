@@ -1,3 +1,7 @@
+from typing import List
+
+from psycopg import sql
+
 from app.src.database import get_async_pool
 from app.src.models.item import Item
 async_pool = get_async_pool()
@@ -20,14 +24,23 @@ class GuestUtils:
             )
             return await GuestUtils.parse_result(cur)
 
+
     @staticmethod
-    async def add_item(order_id: int, item: Item):
+    async def add_items(order_id: int, items: List[Item]):
         async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "INSERT INTO order_items (order_id, menu_item_id, number_of_items) "
+                "VALUES (%s, %s, %s)")
+            for item in items:
+                data = (order_id, item.item_id, item.number_of_items)
+                await cur.execute(query, data)
             await cur.execute(
-                f"INSERT INTO order_items (order_id, menu_item_id, number_of_items) \
-                                        VALUES \
-                                        ({order_id}, {item.item_id}, {item.number_of_items})"
+                f"SELECT * \
+                            FROM orders \
+                            WHERE id = '{order_id}';"
             )
+            return await GuestUtils.parse_result(cur)
+
 
     @staticmethod
     async def check_item(item_name: str):

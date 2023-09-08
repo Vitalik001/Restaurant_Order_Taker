@@ -21,14 +21,12 @@ async def get_menu():
 @guest.post("/order")
 async def create_order(items: List[Item]):
     order_id = (await GuestService.create_order())[0]["id"]
-    for item in items:
-        await GuestService.add_item(order_id, item)
-    return order_id
+    return await add_items(order_id, items)
 
 
 @guest.post("/order/{order_id}/item")
-async def add_item(order_id: int, item: Item):
-    return await GuestService.add_item(order_id, item)
+async def add_items(order_id: int, items: List[Item]):
+    return await GuestService.add_items(order_id, items)
 
 @guest.get("/check_item")
 async def check_item(item_name: str):

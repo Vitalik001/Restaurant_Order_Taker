@@ -1,13 +1,17 @@
+import json
+
 import streamlit as st
 import requests
 from config import get_settings
 import re
 
+
+
 settings = get_settings()
 
 class Order:
 
-    order = {}
+    order = dict()
     chat_log = None
     chat_log_element = None
     upsell = None
@@ -115,27 +119,26 @@ class Order:
         return "Bot: - I don't understand"
 
     def add_order(self):
-        # self.send_order_to_api()
-        return "Bot: - Your total is $2.84. Thank you and have a nice day!"
+
+        json_data = [
+            {"item_id": item_id, "number_of_items": number_of_items}
+            for item_id, number_of_items in self.order.items()
+        ]
+
+        json_payload = json.dumps(json_data)
+
+        headers = {"Content-Type": "application/json"}
+
+        url = f"{settings.backend_url}/order"
+        response = requests.post(url, data=json_payload, headers=headers)
+        order = response.json()
+        return f"Bot: - Your total is ${order[0]['total_price']}. Thank you and have a nice day!"
 
 
     def check_item(self, item_name: str):
-        print(item_name)
         response = requests.get(settings.backend_url + "/check_item", params = {"item_name": item_name})
-        print(response)
-        return response
-
-    def send_order_to_api(self):
-        response = requests.post(settings.backend_url, data=self.order)
-
-        if response.status_code == 200:
-            print("POST request successful")
-            response_data = response.json()  # If the response contains JSON data
-            print(response_data)
-        else:
-            print("POST request failed")
-
-
+        result = response.json()
+        return result[0]["id"] if result else None
 
 if __name__ == "__main__":
     Order()
