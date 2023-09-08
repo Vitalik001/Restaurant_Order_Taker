@@ -1,6 +1,5 @@
 from app.src.database import get_async_pool
 from app.src.models.item import Item
-
 async_pool = get_async_pool()
 
 
