@@ -31,7 +31,7 @@ CREATE TABLE order_items (
 CREATE TABLE chats (
     order_id INT NOT NULL,
     message_id SERIAL,
-    message VARCHAR(30) NOT NULL,
+    message VARCHAR(60) NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 
