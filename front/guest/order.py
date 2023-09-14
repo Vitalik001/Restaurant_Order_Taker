@@ -66,6 +66,9 @@ class Order:
     def submit(self):
         self.handle_message(st.session_state.widget)
         st.session_state.something = st.session_state.widget
+        if st.session_state.widget == "That's all":
+            del self
+
         st.session_state.widget = ""
 
     # handle user message(visualize and generate response)
@@ -80,6 +83,7 @@ class Order:
         self.chat_log_element.markdown(
             f"<div class='chat-log'>{updated_chat_log}</div>", unsafe_allow_html=True
     )
+
 
 
     def generate_bot_response(self, user_input):

@@ -15,7 +15,8 @@ CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     time_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    number_of_all_items INT NOT NULL DEFAULT 0
+    number_of_all_items INT NOT NULL DEFAULT 0,
+    upsell BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE order_items (
@@ -23,7 +24,15 @@ CREATE TABLE order_items (
     menu_item_id INT NOT NULL,
     number_of_items INT NOT NULL DEFAULT 1,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (menu_item_id) REFERENCES menu(id)
+    FOREIGN KEY (menu_item_id) REFERENCES menu(id),
+    UNIQUE (order_id, menu_item_id)
+);
+
+CREATE TABLE chats (
+    order_id INT NOT NULL,
+    message_id SERIAL,
+    message VARCHAR(30) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 
 -- Create a function to calculate and update total_price and number_of_items for an order

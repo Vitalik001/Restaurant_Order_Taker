@@ -22,26 +22,63 @@ class GuestUtils:
                                 VALUES (CURRENT_TIMESTAMP) \
                                 RETURNING id;"
             )
-            return await GuestUtils.parse_result(cur)
+            order_id = (await GuestUtils.parse_result(cur))[0]["id"]
+            await cur.execute(
+                f"INSERT INTO chats (order_id, message) \
+                VALUES ({order_id}, 'Welcome, what can I get you?') \
+                RETURNING message;"
+            )
+
+            return {"order_id": order_id, "response": (await GuestUtils.parse_result(cur))[0]["message"]}
 
 
     @staticmethod
-    async def add_items(order_id: int, items: List[Item]):
+    async def add_item(session_id: int, item_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query = sql.SQL(
-                "INSERT INTO order_items (order_id, menu_item_id, number_of_items) "
-                "VALUES (%s, %s, %s)")
-            for item in items:
-                data = (order_id, item.item_id, item.number_of_items)
-                await cur.execute(query, data)
-            await cur.execute(
-                f"SELECT * \
-                            FROM orders \
-                            WHERE id = '{order_id}';"
+                "INSERT INTO order_items (order_id, menu_item_id) "
+                "VALUES (%s, %s) "
+                "ON CONFLICT (order_id, menu_item_id) "
+                "DO UPDATE SET number_of_items = order_items.number_of_items + 1 "
+                "RETURNING number_of_items;"
             )
-            return await GuestUtils.parse_result(cur)
 
+            data = (session_id, item_id)
+            await cur.execute(query, data)
 
+            return (await GuestUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def set_upsell(session_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "UPDATE orders "
+                "SET upsell = TRUE "
+                "WHERE id = %s "
+                "RETURNING upsell;"
+            )
+
+            data = (session_id,)
+            await cur.execute(query, data)
+
+            return (await GuestUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def check_order_upsell(session_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "SELECT upsell"
+                "FROM orders"
+                "WHERE id = %s "
+                "LIMIT 1;"
+            )
+
+            data = (session_id,)
+            await cur.execute(query, data)
+
+            return (await GuestUtils.parse_result(cur))[0]
+
+    #
     @staticmethod
     async def check_item(item_name: str):
         async with async_pool.connection() as conn, conn.cursor() as cur:
@@ -51,7 +88,7 @@ class GuestUtils:
                 WHERE name = '{item_name}';"
             )
             return await GuestUtils.parse_result(cur)
-
+    #
     @staticmethod
     async def get_upsell():
         async with async_pool.connection() as conn, conn.cursor() as cur:
@@ -61,8 +98,8 @@ class GuestUtils:
                     WHERE type = 'Drink' \
                     LIMIT 1;"
             )
-            return await GuestUtils.parse_result(cur)
-
+            return (await GuestUtils.parse_result(cur))[0]
+    #
     @staticmethod
     async def parse_result(cur):
         result = []
@@ -72,4 +109,4 @@ class GuestUtils:
                 row_dict[column_name[0]] = row[i]
             result.append(row_dict)
         return result
-
+    #
