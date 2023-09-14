@@ -14,6 +14,23 @@ class GuestUtils:
             await cur.execute("select * from menu")
             return await GuestUtils.parse_result(cur)
 
+
+    @staticmethod
+    async def save_message(session_id: int, message: str):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "INSERT INTO chats (order_id, message) "
+                "VALUES (%s, %s) "
+                "RETURNING message; "
+            )
+            data = (session_id, message)
+            await cur.execute(query, data)
+
+            return (await GuestUtils.parse_result(cur))[0]
+
+
+
+
     @staticmethod
     async def create_order():
         async with async_pool.connection() as conn, conn.cursor() as cur:
@@ -53,32 +70,30 @@ class GuestUtils:
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query = sql.SQL(
                 "UPDATE orders "
-                "SET upsell = TRUE "
+                "SET upsell = true "
                 "WHERE id = %s "
                 "RETURNING upsell;"
             )
-
             data = (session_id,)
             await cur.execute(query, data)
-
+            await conn.commit()
             return (await GuestUtils.parse_result(cur))[0]
 
     @staticmethod
     async def check_order_upsell(session_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query = sql.SQL(
-                "SELECT upsell"
-                "FROM orders"
+                "SELECT upsell "
+                "FROM orders "
                 "WHERE id = %s "
                 "LIMIT 1;"
             )
-
             data = (session_id,)
             await cur.execute(query, data)
 
             return (await GuestUtils.parse_result(cur))[0]
 
-    #
+
     @staticmethod
     async def check_item(item_name: str):
         async with async_pool.connection() as conn, conn.cursor() as cur:
@@ -99,7 +114,7 @@ class GuestUtils:
                     LIMIT 1;"
             )
             return (await GuestUtils.parse_result(cur))[0]
-    #
+
     @staticmethod
     async def parse_result(cur):
         result = []

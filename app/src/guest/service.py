@@ -33,19 +33,19 @@ class GuestService:
             if item:
                 item_id = item[0]["id"]
                 await GuestUtils.add_item(session_id, item_id)
+                upsell = (await GuestUtils.get_upsell())
 
                 # if selected item is an upsell do not recommend it
-
-                if id == (await GuestUtils.get_upsell())['id']:
+                if item_id == upsell['id']:
                     await GuestUtils.set_upsell(session_id)
-                #
+
                 # # if upsell was not recommend, recommend it
-                return await GuestUtils.check_order_upsell(session_id)
-                #     self.upsell_recommended = True
-                #     return f"Bot: - Would you like to add a {self.upsell['name']} for ${self.upsell['price']}?"
-                #
-                return "Bot: - Would you like anything else?"
-        return "Bot: - I don't understand"
+                if not (await GuestUtils.check_order_upsell(session_id))["upsell"]:
+                    await GuestUtils.set_upsell(session_id)
+                    return await GuestUtils.save_message(session_id, f"- Would you like to add a {upsell['name']} for ${upsell['price']}?")
+
+                return await GuestUtils.save_message(session_id, "- Would you like anything else?")
+        return await GuestUtils.save_message(session_id, "- I don't understand")
 
 
     # def generate_bot_response(self, user_input):
