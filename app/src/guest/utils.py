@@ -1,7 +1,7 @@
-
 from psycopg import sql
 
 from app.src.database import get_async_pool
+
 async_pool = get_async_pool()
 
 
@@ -9,27 +9,9 @@ class GuestUtils:
     @staticmethod
     async def get_menu():
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "SELECT * FROM menu "
-            )
+            query = sql.SQL("SELECT * FROM menu ")
             await cur.execute(query)
             return await GuestUtils.parse_result(cur)
-
-    @staticmethod
-    async def get_order(order_id: int):
-        async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "SELECT * "
-                "FROM orders "
-                "WHERE id = %s "
-                "LIMIT 1;"
-            )
-
-            data = (order_id, )
-            await cur.execute(query, data)
-
-            return (await GuestUtils.parse_result(cur))[0]
-
 
     @staticmethod
     async def save_message(session_id: int, message: str):
@@ -63,7 +45,10 @@ class GuestUtils:
             data = (order_id, "Welcome, what can I get you?")
             await cur.execute(query, data)
 
-            return {"order_id": order_id, "message": (await GuestUtils.parse_result(cur))[0]["message"]}
+            return {
+                "order_id": order_id,
+                "message": (await GuestUtils.parse_result(cur))[0]["message"],
+            }
 
     @staticmethod
     async def add_item(session_id: int, item_id: int):
@@ -123,14 +108,19 @@ class GuestUtils:
             return (await GuestUtils.parse_result(cur))[0]
 
     @staticmethod
-    async def check_order_upsell(session_id: int):
+    async def set_completed(session_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query = sql.SQL(
-                "SELECT upsell "
-                "FROM orders "
-                "WHERE id = %s "
-                "LIMIT 1;"
+                "UPDATE orders " "SET completed = true " "WHERE id = %s " "RETURNING *;"
             )
+            data = (session_id,)
+            await cur.execute(query, data)
+            return (await GuestUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def check_order_upsell(session_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL("SELECT upsell " "FROM orders " "WHERE id = %s " "LIMIT 1;")
             data = (session_id,)
             await cur.execute(query, data)
 
@@ -139,12 +129,7 @@ class GuestUtils:
     @staticmethod
     async def check_item(item_name: str):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "SELECT id "
-                "FROM menu "
-                "WHERE name = %s "
-                "LIMIT 1;"
-            )
+            query = sql.SQL("SELECT id " "FROM menu " "WHERE name = %s " "LIMIT 1;")
             data = (item_name,)
             await cur.execute(query, data)
 
@@ -153,12 +138,7 @@ class GuestUtils:
     @staticmethod
     async def get_upsell():
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "SELECT * "
-                "FROM menu "
-                "WHERE type = %s "
-                "LIMIT 1;"
-            )
+            query = sql.SQL("SELECT * " "FROM menu " "WHERE type = %s " "LIMIT 1;")
             data = ("Drink",)
             await cur.execute(query, data)
 
@@ -173,4 +153,3 @@ class GuestUtils:
                 row_dict[column_name[0]] = row[i]
             result.append(row_dict)
         return result
-

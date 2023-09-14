@@ -6,11 +6,10 @@ from config import get_settings
 import re
 
 
-
 settings = get_settings()
 
-class Order:
 
+class Order:
     order = dict()
     chat_log = None
     chat_log_element = None
@@ -43,6 +42,7 @@ class Order:
 
         if "something" not in st.session_state:
             st.session_state.something = ""
+
     def display_chat_log(self):
         chat_style = """
             <style>
@@ -57,7 +57,9 @@ class Order:
         st.markdown(chat_style, unsafe_allow_html=True)
 
         self.chat_log = "<br>".join(st.session_state.messages)
-        self.chat_log_element = st.empty()  # Create an empty element to update the chat log
+        self.chat_log_element = (
+            st.empty()
+        )  # Create an empty element to update the chat log
         self.chat_log_element.markdown(
             f"<div class='chat-log'>{self.chat_log}</div>", unsafe_allow_html=True
         )
@@ -82,18 +84,16 @@ class Order:
         updated_chat_log = "<br>".join(st.session_state.messages)
         self.chat_log_element.markdown(
             f"<div class='chat-log'>{updated_chat_log}</div>", unsafe_allow_html=True
-    )
-
-
+        )
 
     def generate_bot_response(self, user_input):
-        if match:=re.match(r"^i'd like (an? )?(.+)$", user_input, re.IGNORECASE):
+        if match := re.match(r"^i'd like (an? )?(.+)$", user_input, re.IGNORECASE):
             item_name = match.group(2)
-            if id:=self.check_item(item_name):
+            if id := self.check_item(item_name):
                 self.order[id] = self.order.setdefault(id, 0) + 1
 
                 # if selected item is an upsell do not recommend it
-                if id == self.upsell['id']:
+                if id == self.upsell["id"]:
                     self.upsell_recommended = True
 
                 # if upsell was not recommend, recommend it
@@ -104,18 +104,17 @@ class Order:
                 return "Bot: - Would you like anything else?"
 
         elif re.match(r"yes, please$", user_input, re.IGNORECASE):
-            self.order[self.upsell['id']] = 1
+            self.order[self.upsell["id"]] = 1
             return "Bot: - Would you like anything else?"
 
         elif re.match(r"no, thank you$", user_input, re.IGNORECASE):
             return "Bot: - Would you like anything else?"
 
-        elif match:=re.match(r"i don't want (an? )?(.+)$", user_input, re.IGNORECASE):
+        elif match := re.match(r"i don't want (an? )?(.+)$", user_input, re.IGNORECASE):
             item_name = match.group(2)
-            if id:=self.check_item(item_name):
+            if id := self.check_item(item_name):
                 self.order.pop(id)
                 return "Bot: - Would you like anything else?"
-
 
         elif user_input == "That's all":
             return self.add_order()
@@ -123,7 +122,6 @@ class Order:
         return "Bot: - I don't understand"
 
     def add_order(self):
-
         json_data = [
             {"item_id": item_id, "number_of_items": number_of_items}
             for item_id, number_of_items in self.order.items()
@@ -138,11 +136,13 @@ class Order:
         order = response.json()
         return f"Bot: - Your total is ${order[0]['total_price']}. Thank you and have a nice day!"
 
-
     def check_item(self, item_name: str):
-        response = requests.get(settings.backend_url + "/check_item", params = {"item_name": item_name})
+        response = requests.get(
+            settings.backend_url + "/check_item", params={"item_name": item_name}
+        )
         result = response.json()
         return result[0]["id"] if result else None
+
 
 if __name__ == "__main__":
     Order()

@@ -39,8 +39,10 @@ class AdminUtils:
     @staticmethod
     async def del_order(id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            await cur.execute(f"DELETE FROM orders \
-                                WHERE id = {id};")
+            await cur.execute(
+                f"DELETE FROM orders \
+                                WHERE id = {id};"
+            )
             return 200
 
     @staticmethod
@@ -52,7 +54,8 @@ class AdminUtils:
     @staticmethod
     async def get_stats():
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            await cur.execute("SELECT \
+            await cur.execute(
+                "SELECT \
                     COUNT(*) AS total_orders, \
                     SUM(total_price) AS total_revenue, \
                     AVG(total_price) AS average_order_price, \
@@ -62,7 +65,6 @@ class AdminUtils:
                     MIN(number_of_all_items) AS min_items_per_order, \
                     MAX(number_of_all_items) AS max_items_per_order \
                 FROM \
-                    orders;")
+                    orders;"
+            )
             return await cur.fetchall()
-
-

@@ -1,6 +1,8 @@
 import streamlit as st
 from .menu import show_menu
 from .order import Order
+
+
 def guest_page():
     st.title("Welcome to our restaurant!")
     options = ["make order", "menu"]

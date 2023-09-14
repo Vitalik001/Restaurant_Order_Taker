@@ -14,7 +14,6 @@ class AdminService:
     async def del_order(id: int):
         return await AdminUtils.del_order(id)
 
-
     @staticmethod
     async def get_order_items():
         return await AdminUtils.get_order_items()

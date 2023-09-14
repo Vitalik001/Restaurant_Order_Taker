@@ -21,10 +21,12 @@ async def get_order(id: int):
 async def del_order(id: int):
     return await AdminService.del_order(id)
 
+
 # GET /order_items - return order_items table
 @admin.get("/order_items")
 async def get_order_items():
     return await AdminService.get_order_items()
+
 
 # GET /stats - return general stats
 @admin.get("/stats")

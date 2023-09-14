@@ -16,7 +16,8 @@ CREATE TABLE orders (
     time_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     number_of_all_items INT NOT NULL DEFAULT 0,
-    upsell BOOLEAN NOT NULL DEFAULT false
+    upsell BOOLEAN NOT NULL DEFAULT false,
+    completed BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE order_items (
