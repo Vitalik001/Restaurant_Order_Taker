@@ -1,38 +1,39 @@
 from app.src.database import get_async_pool
-
+from psycopg import sql
 async_pool = get_async_pool()
 
 
 class AdminUtils:
-    @staticmethod
-    async def get_orders():
-        async with async_pool.connection() as conn, conn.cursor() as cur:
-            await cur.execute("select * from orders")
-            return await cur.fetchall()
 
     @staticmethod
+    async def get_completed_orders_info():
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "SELECT "
+                "   o.id, "
+                "   total_price, "
+                "   JSON_AGG( "
+                "       JSONB_BUILD_OBJECT( "
+                "           'name', m.name, "
+                "           'number', oi.number_of_items "
+                "       ) ORDER BY m.name "
+                "   ) AS items, "
+                "   (SELECT JSON_AGG(c.message) FROM chats c WHERE c.order_id = o.id) AS chat "
+                "FROM orders o "
+                "LEFT JOIN order_items oi ON o.id = oi.order_id "
+                "LEFT JOIN menu m ON oi.menu_item_id = m.id "
+                "WHERE o.completed = true "
+                "GROUP BY o.id, total_price "
+                "ORDER BY o.id;"
+            )
+
+            await cur.execute(query)
+            return await AdminUtils.parse_result(cur)
+
     async def get_order(id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
             await cur.execute(
-                f"SELECT \
-                o.id AS order_id, \
-                o.time_created AS order_time, \
-                o.total_price AS order_total_price, \
-                o.number_of_all_items AS order_total_items, \
-                mi.id AS menu_item_id, \
-                mi.name AS menu_item_name, \
-                mi.type AS menu_item_type, \
-                mi.price AS menu_item_price, \
-                oi.number_of_items AS item_quantity \
-            FROM \
-                orders o \
-            JOIN \
-                order_items oi ON o.id = oi.order_id \
-            JOIN \
-                menu mi ON oi.menu_item_id = mi.id \
-            WHERE \
-                o.id = {id}; \
-            "
+                f"SELECT * from orders where id = {id}"
             )
             return await cur.fetchall()
 
@@ -68,3 +69,13 @@ class AdminUtils:
                     orders;"
             )
             return await cur.fetchall()
+
+    @staticmethod
+    async def parse_result(cur):
+        result = []
+        for row in await cur.fetchall():
+            row_dict = {}
+            for i, column_name in enumerate(cur.description):
+                row_dict[column_name[0]] = row[i]
+            result.append(row_dict)
+        return result

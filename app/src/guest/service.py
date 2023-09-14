@@ -31,6 +31,7 @@ class GuestService:
 
                 # # if upsell was not recommend, recommend it
                 if not (await GuestUtils.check_order_upsell(session_id))["upsell"]:
+                    await GuestUtils.set_upsell(session_id)
                     return await GuestUtils.save_message(
                         session_id,
                         f"- Would you like to add a(an) {upsell['name']} for ${upsell['price']}?",
@@ -44,10 +45,8 @@ class GuestService:
 
         elif (
             re.match(r"^yes,?( please(\.?))?$", message, re.IGNORECASE)
-            and not (await GuestUtils.check_order_upsell(session_id))["upsell"]
         ):
             upsell = await GuestUtils.get_upsell()
-            await GuestUtils.set_upsell(session_id)
             await GuestUtils.add_item(session_id, upsell["id"])
 
             return await GuestUtils.save_message(
@@ -56,9 +55,7 @@ class GuestService:
 
         elif (
             re.match(r"^no,?( thank you(\.?))?$", message, re.IGNORECASE)
-            and not (await GuestUtils.check_order_upsell(session_id))["upsell"]
         ):
-            await GuestUtils.set_upsell(session_id)
             return await GuestUtils.save_message(
                 session_id, "- Would you like anything else?"
             )

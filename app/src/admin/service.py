@@ -4,7 +4,7 @@ from app.src.admin.utils import AdminUtils
 class AdminService:
     @staticmethod
     async def get_orders():
-        return await AdminUtils.get_orders()
+        return await AdminUtils.get_completed_orders_info()
 
     @staticmethod
     async def get_order(id: int):
