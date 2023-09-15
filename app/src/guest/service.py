@@ -38,14 +38,14 @@ class GuestService:
                     await GuestUtils.ask_upsell()
                     return await GuestUtils.save_message(
                         session_id,
-                        f"- Would you like to add a(an) {upsell['name']} for ${upsell['price']}?",
+                        f"Would you like to add a(an) {upsell['name']} for ${upsell['price']}?",
                     )
 
                 return await GuestUtils.save_message(
-                    session_id, "- Would you like anything else?"
+                    session_id, "Would you like anything else?"
                 )
 
-            return await GuestUtils.save_message(session_id, "- I don't understand")
+            return await GuestUtils.save_message(session_id, "I don't understand")
 
         elif re.match(r"^yes,?( please(\.?))?$", message, re.IGNORECASE):
             # mark as accepted for upsell_stats
@@ -55,7 +55,7 @@ class GuestService:
             await GuestUtils.add_item(session_id, upsell["id"])
 
             return await GuestUtils.save_message(
-                session_id, "- Would you like anything else?"
+                session_id, "Would you like anything else?"
             )
 
         elif re.match(r"^no,?( thank you(\.?))?$", message, re.IGNORECASE):
@@ -73,15 +73,15 @@ class GuestService:
             if item:
                 await GuestUtils.remove_item(session_id, item["id"])
                 return await GuestUtils.save_message(
-                    session_id, "- Would you like anything else?"
+                    session_id, "Would you like anything else?"
                 )
-            return await GuestUtils.save_message(session_id, "- I don't understand")
+            return await GuestUtils.save_message(session_id, "I don't understand")
 
         elif re.match(r"^that's all(\.?)$", message, re.IGNORECASE):
             order = await GuestUtils.set_completed(session_id)
             return await GuestUtils.save_message(
                 session_id,
-                f"- Your total is ${order['total_price']}. Thank you and have a nice day!",
+                f"Your total is ${order['total_price']}. Thank you and have a nice day!",
             )
 
-        return await GuestUtils.save_message(session_id, "- I don't understand.")
+        return await GuestUtils.save_message(session_id, "I don't understand.")

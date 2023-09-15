@@ -1,38 +1,75 @@
 import streamlit as st
 import requests
 import matplotlib.pyplot as plt
+import pandas as pd
+import altair as alt
 BACKEND_URL = "http://app:80/admin"
 
-
-
-st.set_page_config(page_title="Stats", page_icon="📊")
-
-# Make a request to the admin/orders endpoint
+st.set_page_config(page_title="Orders", page_icon="🛍️")
 orders_response = requests.get(f"{BACKEND_URL}/stats")
-orders_data = orders_response.json()
-upsell_stats = orders_data["upsell_stats"]
-st.title("Upsell Statistics")
+data = orders_response.json()
+item_names = [item["name"] for item in data["items"]]
+number_of_orders = [item["number_of_orders"] for item in data["items"]]
+# Create a bar chart
+col1, col2, col3 = st.columns(3)
 
-# Create a Matplotlib figure with subplots
-fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+with st.container():
+    col1.metric(label='Total Orders', value=data["total_orders"])
+    col2.metric(label='Total Revenue', value=f'${round(data["total_revenue"], 2):0.2f}')
+    col3.metric(label='Average Order Price', value=f'${round(data["average_order_price"], 2):0.2f}')
 
-# Plot 1: Bar chart for accepted and rejected upsells
-labels = ['Accepted', 'Rejected']
-values = [upsell_stats['accepted'], upsell_stats['rejected']]
-axes[0].bar(labels, values)
-axes[0].set_title('Accepted vs Rejected')
 
-# Plot 2: Pie chart for questions asked and accepted
-labels2 = ['Questions Asked', 'Accepted']
-sizes2 = [upsell_stats['questions_asked'], upsell_stats['accepted']]
-axes[1].pie(sizes2, labels=labels2, autopct='%1.1f%%', startangle=90)
-axes[1].set_title('Questions Asked vs Accepted')
-axes[1].axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 
-total_revenue = upsell_stats['total_upsell_revenue']
-total_revenue_text = f"Total Upsell Revenue: ${total_revenue:.2f}"
-fig.text(0.5, 0.05, total_revenue_text, ha='center', fontsize=12, bbox=dict(facecolor='lightgray', alpha=0.7))
+col1, col2 = st.columns(2)
 
-# Display the Matplotlib figure in Streamlit
+with col1:
+    st.header('Upsell Stats')
+    col1.metric(label='Total Upsell Revenue', value=f'${round(data["upsell_stats"]["total_upsell_revenue"], 2):0.2f}')
+    st.bar_chart({key.capitalize(): value for key, value in data["upsell_stats"].items() if key != "total_upsell_revenue"})
 
-st.pyplot(fig)
+items_df = pd.DataFrame(data["items"])
+
+bar_chart = alt.Chart(items_df).mark_bar().encode(
+    x=alt.X('number_of_orders:Q', axis=alt.Axis(title='Number of Orders')),
+    y=alt.Y('name:N', axis=alt.Axis(title='Item Name'))
+).properties(
+    width=500
+)
+with col2:
+    st.header('Items Stats')
+    st.altair_chart(bar_chart)
+
+
+def visualize_order(order):
+    col1, col2, col3 = st.columns(3)
+
+    with st.container():
+        col1.metric(label='Id', value=order["id"])
+        col2.metric(label='Total Price', value=f'${round(order["total_price"], 2):0.2f}')
+
+
+    items_df = pd.DataFrame(order["items"])
+
+    bar_chart = alt.Chart(items_df).mark_bar().encode(
+        x=alt.X('number:Q', axis=alt.Axis(title='Number of Orders')),
+        y=alt.Y('name:N', axis=alt.Axis(title='Item Name'))
+    ).properties(
+        width=300
+    )
+    with col3:
+        st.header('Order Items')
+        st.altair_chart(bar_chart)
+
+    with st.expander("Chat History"):
+        for message in order["chat"]:
+            st.write(f"- {message}")
+
+
+
+st.title("Completed Orders:")
+orders_response = requests.get(f"{BACKEND_URL}/orders")
+data = orders_response.json()
+# Display information for each order
+for order in data:
+    visualize_order(order)
+

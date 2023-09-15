@@ -1,15 +1,10 @@
 import streamlit as st
-
 import requests
-
 
 from config import get_settings
 
 
 settings = get_settings()
-
-
-
 
 st.set_page_config(
     page_title="Menu",

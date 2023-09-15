@@ -13,7 +13,7 @@ def initialize_chat_session():
         session_id = session["order_id"]
         message = session["message"]
         st.session_state.session_id = session_id
-        st.session_state.messages = [f"Restaurant: -{message}"]
+        st.session_state.messages = [f"Restaurant: - {message}"]
 
     if "something" not in st.session_state:
         st.session_state.something = ""
@@ -32,6 +32,11 @@ def display_chat_log():
                 overflow-y: auto;
                 display: flex;
                 flex-direction: column-reverse;
+            }
+            .css-1y4p8pa {
+            width: 100%;
+            padding: 6rem 1rem 3rem;
+            max-width: 46rem;
             }
         </style>
     """
@@ -54,7 +59,7 @@ def submit():
 
 # handle user message(visualize and generate response)
 def handle_message(message):
-    user_message = f"You: -{message}"
+    user_message = f"You: - {message}"
     bot_response = generate_bot_response(message)
 
     st.session_state.messages.append(user_message)
@@ -72,7 +77,7 @@ def generate_bot_response(user_input):
         params=data,
         headers={"Content-Type": "application/json"},
     )
-    return f"Restaurant: {response.json()['message']}"
+    return f"Restaurant: - {response.json()['message']}"
 
 st.set_page_config(page_title="Make Order", page_icon="🛎️")
 
