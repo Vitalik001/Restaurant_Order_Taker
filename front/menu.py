@@ -12,9 +12,16 @@ st.set_page_config(
 )
 
 st.write("# Welcome to our Restaurant! 👋")
-response = requests.get(f"{settings.backend_url}/menu")
+response = requests.get(f"{settings.backend_url_guest}/menu")
 
 menu = response.json()
 
-st.write("MENU:")
-st.table(menu)
+formatted_menu_data = []
+for item in menu:
+    name = item["name"]
+    price = item["price"]
+    formatted_price = f"${price:.2f}"
+    formatted_menu_data.append({"name": name, "price": formatted_price})
+
+
+st.table(formatted_menu_data)

@@ -4,7 +4,8 @@ from pydantic import BaseSettings
 
 
 class Settings(BaseSettings):
-    backend_url: str
+    backend_url_guest: str
+    backend_url_admin: str
 
     class Config:
         env_file = ".env"

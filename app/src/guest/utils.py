@@ -9,7 +9,7 @@ class GuestUtils:
     @staticmethod
     async def get_menu():
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL("SELECT * FROM menu ")
+            query = sql.SQL("SELECT name, price FROM menu ")
             await cur.execute(query)
             return await GuestUtils.parse_result(cur)
 

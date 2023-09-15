@@ -62,7 +62,7 @@ class GuestService:
             # mark as rejected for upsell_stats
             await GuestUtils.reject_upsell()
             return await GuestUtils.save_message(
-                session_id, "- Would you like anything else?"
+                session_id, "Would you like anything else?"
             )
 
         elif match := re.match(
