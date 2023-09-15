@@ -11,7 +11,3 @@ def guest_page():
         Order()
     else:
         show_menu()
-
-
-if __name__ == "__main__":
-    guest_page()

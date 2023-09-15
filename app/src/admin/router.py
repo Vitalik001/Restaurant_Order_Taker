@@ -12,7 +12,7 @@ def root():
 
 @admin.get("/orders")
 async def get_completed_orders_info():
-    return await AdminService.get_orders()
+    return await AdminService.get_completed_orders_info()
 
 
 # GET /stats - return general stats

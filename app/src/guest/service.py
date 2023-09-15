@@ -81,7 +81,7 @@ class GuestService:
             order = await GuestUtils.set_completed(session_id)
             return await GuestUtils.save_message(
                 session_id,
-                f"Your total is ${order['total_price']}. Thank you and have a nice day!",
+                f"- Your total is ${order['total_price']}. Thank you and have a nice day!",
             )
 
         return await GuestUtils.save_message(session_id, "- I don't understand.")
