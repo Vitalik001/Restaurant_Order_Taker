@@ -29,11 +29,7 @@ class GuestUtils:
     @staticmethod
     async def create_order():
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "INSERT INTO orders (time_created) "
-                "VALUES (CURRENT_TIMESTAMP) "
-                "RETURNING id; "
-            )
+            query = sql.SQL("INSERT INTO orders " "DEFAULT VALUES " "RETURNING id; ")
             await cur.execute(query)
             order_id = (await GuestUtils.parse_result(cur))[0]["id"]
 
@@ -143,6 +139,54 @@ class GuestUtils:
             await cur.execute(query, data)
 
             return (await GuestUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def accept_upsell():
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "INSERT INTO upsell_stats (upsell_id) "
+                "VALUES (%s) "
+                "ON CONFLICT (upsell_id) DO UPDATE "
+                "SET accepted = upsell_stats.accepted + 1 "
+                "RETURNING accepted;"
+            )
+
+            data = ((await GuestUtils.get_upsell())["id"],)
+            await cur.execute(query, data)
+
+            return await GuestUtils.parse_result(cur)
+
+    @staticmethod
+    async def ask_upsell():
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "INSERT INTO upsell_stats (upsell_id) "
+                "VALUES (%s) "
+                "ON CONFLICT (upsell_id) DO UPDATE "
+                "SET asked = upsell_stats.asked + 1 "
+                "RETURNING asked;"
+            )
+
+            data = ((await GuestUtils.get_upsell())["id"],)
+            await cur.execute(query, data)
+
+            return await GuestUtils.parse_result(cur)
+
+    @staticmethod
+    async def reject_upsell():
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "INSERT INTO upsell_stats (upsell_id) "
+                "VALUES (%s) "
+                "ON CONFLICT (upsell_id) DO UPDATE "
+                "SET rejected = upsell_stats.rejected + 1 "
+                "RETURNING rejected;"
+            )
+
+            data = ((await GuestUtils.get_upsell())["id"],)
+            await cur.execute(query, data)
+
+            return await GuestUtils.parse_result(cur)
 
     @staticmethod
     async def parse_result(cur):

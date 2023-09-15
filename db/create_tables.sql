@@ -1,10 +1,9 @@
--- add stats table
--- add column for number of orders of the menu item
 CREATE TABLE menu (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
-    price DECIMAL(10, 2) NOT NULL
+    price DECIMAL(10, 2) NOT NULL,
+    number_of_orders INT NOT NULL DEFAULT 0
 );
 
 COPY menu(name, type, price)
@@ -13,9 +12,7 @@ WITH (FORMAT csv, HEADER true);
 
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
-    time_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    number_of_all_items INT NOT NULL DEFAULT 0,
     upsell BOOLEAN NOT NULL DEFAULT false,
     completed BOOLEAN NOT NULL DEFAULT false
 );
@@ -36,7 +33,19 @@ CREATE TABLE chats (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 
--- Create a function to calculate and update total_price and number_of_items for an order
+CREATE TABLE upsell_stats (
+    upsell_id INT NOT NULL,
+    asked INT NOT NULL DEFAULT 0,
+    accepted INT NOT NULL DEFAULT 0,
+    rejected INT NOT NULL DEFAULT 0,
+    total_revenue DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    FOREIGN KEY (upsell_id) REFERENCES menu(id) ON DELETE CASCADE,
+    UNIQUE (upsell_id)
+
+);
+
+
+-- Create a function to calculate and update total_price for an order
 CREATE OR REPLACE FUNCTION update_order()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -47,20 +56,43 @@ BEGIN
             FROM order_items oi
             JOIN menu m ON oi.menu_item_id = m.id
             WHERE oi.order_id = o.id
-        ), 0.00),
-        number_of_all_items = COALESCE((
+        ), 0.00)
+    WHERE o.id = NEW.order_id;
+
+    UPDATE menu m
+    SET
+        number_of_orders = COALESCE((
             SELECT SUM(oi.number_of_items)
             FROM order_items oi
-            WHERE oi.order_id = o.id
+            WHERE oi.menu_item_id = NEW.menu_item_id
         ), 0)
-    WHERE o.id = NEW.order_id;
+    WHERE m.id = NEW.menu_item_id;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Create a trigger to automatically update total_price and number_of_items when inserting or updating order_items
+
+CREATE OR REPLACE FUNCTION update_total_revenue()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Calculate total_revenue based on accepted and menu price
+    SELECT INTO NEW.total_revenue (NEW.accepted * m.price)
+    FROM menu m
+    WHERE m.id = NEW.upsell_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Create a trigger to automatically update total_price when inserting or updating order_items
 CREATE TRIGGER update_order_trigger
-AFTER INSERT OR UPDATE ON order_items
+AFTER INSERT OR UPDATE OR DELETE ON order_items
 FOR EACH ROW
 EXECUTE FUNCTION update_order();
+
+CREATE TRIGGER update_total_revenue_trigger
+BEFORE INSERT OR UPDATE ON upsell_stats
+FOR EACH ROW
+EXECUTE FUNCTION update_total_revenue();
