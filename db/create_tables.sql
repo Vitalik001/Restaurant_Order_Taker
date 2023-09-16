@@ -6,9 +6,9 @@ CREATE TABLE menu (
     number_of_orders INT NOT NULL DEFAULT 0
 );
 
-COPY menu(name, type, price)
-FROM '/code/db/menu.csv'
-WITH (FORMAT csv, HEADER true);
+-- COPY menu(name, type, price)
+-- FROM '/code/db/menu.csv'
+-- WITH (FORMAT csv, HEADER true);
 
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,

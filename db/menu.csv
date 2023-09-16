@@ -1,6 +1,5 @@
-name, type, price
-Oysters,Dish,2.14
-Shrimps,Dish,1.45
-Caviar,Dish,2.54
-Lobster,Dish,3.10
-Sparkling wine,Drink,0.70
+1,Oysters,Dish,2.14,0
+2,Shrimps,Dish,1.45,0
+3,Caviar,Dish,2.54,0
+4,Lobster,Dish,3.10,0
+5,Sparkling wine,Drink,0.70,0
