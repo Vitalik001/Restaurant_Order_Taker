@@ -1,3 +1,4 @@
+from app.src.admin.models.menu_item import Menu_item
 from app.src.database import get_async_pool
 from psycopg import sql
 
@@ -82,3 +83,40 @@ class AdminUtils:
                 row_dict[column_name[0]] = row[i]
             result.append(row_dict)
         return result
+
+    @staticmethod
+    async def add_menu_item(item: Menu_item):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "INSERT INTO "
+                "menu (name, type, price, in_stock) "
+                "VALUES "
+                "(%s, %s, %s, %s) "
+                "RETURNING id;"
+            )
+
+            data = (item.name, item.type, item.price, item.in_stock)
+            await cur.execute(query, data)
+            return (await AdminUtils.parse_result(cur))[0]
+
+
+    @staticmethod
+    async def change_stock(item_id: int, in_stock: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "UPDATE menu "
+                "SET in_stock = %s "
+                "WHERE id = %s "
+                "RETURNING in_stock;"
+            )
+
+            data = (in_stock, item_id)
+            await cur.execute(query, data)
+            return (await AdminUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def get_menu():
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL("SELECT * FROM menu ")
+            await cur.execute(query)
+            return await AdminUtils.parse_result(cur)

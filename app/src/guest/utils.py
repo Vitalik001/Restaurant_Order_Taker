@@ -49,6 +49,16 @@ class GuestUtils:
     @staticmethod
     async def add_item(session_id: int, item_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
+            # Check if the order is completed
+            # check_completed_query = sql.SQL(
+            #     "SELECT completed FROM orders WHERE id = %s;"
+            # )
+            # await cur.execute(check_completed_query, (session_id,))
+            # order_completed = (await cur.fetchone())[0]
+            #
+            # if order_completed:
+            #     return -1
+
             query = sql.SQL(
                 "INSERT INTO order_items (order_id, menu_item_id) "
                 "VALUES (%s, %s) "

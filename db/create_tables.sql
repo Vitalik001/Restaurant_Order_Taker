@@ -3,10 +3,11 @@ CREATE TABLE menu (
     name VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    number_of_orders INT NOT NULL DEFAULT 0
+    number_of_orders INT NOT NULL DEFAULT 0,
+    in_stock INT NOT NULL
 );
 
-COPY menu(name, type, price)
+COPY menu(name, type, price, in_stock)
 FROM '/code/db/menu.csv'
 WITH (FORMAT csv, HEADER true);
 
