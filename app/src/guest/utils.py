@@ -49,15 +49,6 @@ class GuestUtils:
     @staticmethod
     async def add_item(session_id: int, item_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            # Check if the order is completed
-            # check_completed_query = sql.SQL(
-            #     "SELECT completed FROM orders WHERE id = %s;"
-            # )
-            # await cur.execute(check_completed_query, (session_id,))
-            # order_completed = (await cur.fetchone())[0]
-            #
-            # if order_completed:
-            #     return -1
 
             query = sql.SQL(
                 "INSERT INTO order_items (order_id, menu_item_id) "
@@ -83,6 +74,19 @@ class GuestUtils:
                 "RETURNING number_of_items;"
             )
 
+            data = (session_id, item_id)
+            await cur.execute(query_insert, data)
+            result = await GuestUtils.parse_result(cur)
+            if result and result[0]["number_of_items"] == 0:
+                # If the number_of_items is 0, remove the entry from the table
+                GuestUtils.delete_item(session_id, item_id)
+
+            return result[0] if result else None
+
+    @staticmethod
+    async def delete_item(session_id: int, item_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+
             query_delete = sql.SQL(
                 "DELETE FROM order_items "
                 "WHERE order_id = %s AND menu_item_id = %s "
@@ -90,13 +94,10 @@ class GuestUtils:
             )
 
             data = (session_id, item_id)
-            await cur.execute(query_insert, data)
-            result = await GuestUtils.parse_result(cur)
 
-            if result and result[0]["number_of_items"] == 0:
-                # If the number_of_items is 0, remove the entry from the table
-                await cur.execute(query_delete, data)
-                result = await GuestUtils.parse_result(cur)
+            # If the number_of_items is 0, remove the entry from the table
+            await cur.execute(query_delete, data)
+            result = await GuestUtils.parse_result(cur)
 
             return result[0] if result else None
 
@@ -207,3 +208,39 @@ class GuestUtils:
                 row_dict[column_name[0]] = row[i]
             result.append(row_dict)
         return result
+
+
+    @staticmethod
+    async def reduce_stock(item_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+
+            query = sql.SQL(
+                "UPDATE menu "
+                "SET in_stock = CASE "
+                "    WHEN in_stock > 0 THEN in_stock - 1 "
+                "    ELSE 0 "
+                "END "
+                "WHERE id = %s "
+                "RETURNING in_stock > 0 as stock_status;"
+            )
+
+
+            data = (item_id,)
+            await cur.execute(query, data)
+
+            return (await GuestUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def increment_stock(item_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "UPDATE menu "
+                "SET in_stock = in_stock +1 "
+                "WHERE id = %s;"
+            )
+
+            data = (item_id,)
+            await cur.execute(query, data)
+
+            return await GuestUtils.parse_result(cur)
+

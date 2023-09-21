@@ -7,9 +7,6 @@ class GuestService:
     async def get_menu():
         return await GuestUtils.get_menu()
 
-    @staticmethod
-    async def get_upsell():
-        return await GuestUtils.get_upsell()
 
     @staticmethod
     async def create_order():
@@ -22,6 +19,12 @@ class GuestService:
             item_name = match.group(2)
             item = await GuestUtils.check_item(item_name)
             if item:
+                in_stock = await GuestUtils.reduce_stock(item["id"])
+                if not in_stock["stock_status"]:
+                    return await GuestUtils.save_message(
+                        session_id,
+                        f"I’m sorry but we’re out of {item_name}",
+                    )
                 await GuestUtils.add_item(session_id, item["id"])
                 upsell = await GuestUtils.get_upsell()
 
@@ -30,8 +33,9 @@ class GuestService:
                     await GuestUtils.set_upsell(session_id)
 
                 # # if upsell was not recommend, recommend it
-                if not (await GuestUtils.check_order_upsell(session_id))["upsell"]:
+                if (not (await GuestUtils.check_order_upsell(session_id))["upsell"]) and await GuestUtils.reduce_stock(upsell["id"]):
                     # mark that upsell was recommended
+                    await GuestUtils.increment_stock(upsell["id"])
                     await GuestUtils.set_upsell(session_id)
 
                     # mark as asked for upsell_stats
@@ -52,6 +56,7 @@ class GuestService:
             await GuestUtils.accept_upsell()
 
             upsell = await GuestUtils.get_upsell()
+            await GuestUtils.reduce_stock(upsell["id"])
             await GuestUtils.add_item(session_id, upsell["id"])
 
             return await GuestUtils.save_message(
@@ -72,6 +77,7 @@ class GuestService:
             item = await GuestUtils.check_item(item_name)
             if item:
                 await GuestUtils.remove_item(session_id, item["id"])
+                await GuestUtils.increment_stock(item["id"])
                 return await GuestUtils.save_message(
                     session_id, "Would you like anything else?"
                 )
