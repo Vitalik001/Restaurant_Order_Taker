@@ -15,7 +15,6 @@ if "session" not in st.session_state:
     st.session_state.session = response.json()
     st.session_state.generated = []
     st.session_state["past"] = [""]
-    st.session_state["disabled"] = False
 
 with st.expander("Help"):
     st.markdown("The guest agent can say any of the following messages:")
@@ -50,7 +49,7 @@ def query(payload):
 
 with st.form("user_input_form", clear_on_submit=True):
     st.session_state.user_input = st.text_input(
-        disabled=st.session_state.disabled,
+        disabled=False,
         key="text",
         label="user input",
         label_visibility="hidden",
@@ -67,13 +66,10 @@ if not st.session_state.generated:
 
 if (
     st.session_state.user_input
-    and not re.match(r"^that's all(\.?)$", st.session_state.user_input, re.IGNORECASE)
 ):
     output = query(st.session_state.user_input)
     st.session_state.past.append(f"You: - {st.session_state.user_input}")
     st.session_state.generated.append(f"Restaurant: - {output}")
-elif st.session_state.user_input:
-    st.session_state.disabled = True
 
 if st.session_state["past"]:
     message(st.session_state["generated"][-1], key=str(-1))

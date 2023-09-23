@@ -58,9 +58,10 @@ class GuestUtils:
                 "RETURNING number_of_items;"
             )
 
+
             data = (session_id, item_id)
             await cur.execute(query, data)
-
+            await GuestUtils.reduce_stock(item_id)
             return (await GuestUtils.parse_result(cur))[0]
 
     @staticmethod
@@ -77,6 +78,7 @@ class GuestUtils:
             data = (session_id, item_id)
             await cur.execute(query_insert, data)
             result = await GuestUtils.parse_result(cur)
+            GuestUtils.increment_stock(item_id)
             if result and result[0]["number_of_items"] == 0:
                 # If the number_of_items is 0, remove the entry from the table
                 GuestUtils.delete_item(session_id, item_id)
@@ -94,52 +96,17 @@ class GuestUtils:
             )
 
             data = (session_id, item_id)
-
             # If the number_of_items is 0, remove the entry from the table
             await cur.execute(query_delete, data)
             result = await GuestUtils.parse_result(cur)
-
             return result[0] if result else None
-
-    @staticmethod
-    async def set_upsell(session_id: int):
-        async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "UPDATE orders "
-                "SET upsell = true "
-                "WHERE id = %s "
-                "RETURNING upsell;"
-            )
-            data = (session_id,)
-            await cur.execute(query, data)
-            return (await GuestUtils.parse_result(cur))[0]
-
-    @staticmethod
-    async def set_completed(session_id: int):
-        async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "UPDATE orders " "SET completed = true " "WHERE id = %s " "RETURNING *;"
-            )
-            data = (session_id,)
-            await cur.execute(query, data)
-            return (await GuestUtils.parse_result(cur))[0]
-
-    @staticmethod
-    async def check_order_upsell(session_id: int):
-        async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL("SELECT upsell " "FROM orders " "WHERE id = %s " "LIMIT 1;")
-            data = (session_id,)
-            await cur.execute(query, data)
-
-            return (await GuestUtils.parse_result(cur))[0]
 
     @staticmethod
     async def check_item(item_name: str):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL("SELECT id " "FROM menu " "WHERE name = %s " "LIMIT 1;")
+            query = sql.SQL("SELECT id, in_stock " "FROM menu " "WHERE name = %s " "LIMIT 1;")
             data = (item_name,)
             await cur.execute(query, data)
-
             return (await GuestUtils.parse_result(cur))[0]
 
     @staticmethod
@@ -161,7 +128,6 @@ class GuestUtils:
                 "SET accepted = upsell_stats.accepted + 1 "
                 "RETURNING accepted;"
             )
-
             data = ((await GuestUtils.get_upsell())["id"],)
             await cur.execute(query, data)
 
@@ -177,7 +143,6 @@ class GuestUtils:
                 "SET asked = upsell_stats.asked + 1 "
                 "RETURNING asked;"
             )
-
             data = ((await GuestUtils.get_upsell())["id"],)
             await cur.execute(query, data)
 
@@ -193,7 +158,6 @@ class GuestUtils:
                 "SET rejected = upsell_stats.rejected + 1 "
                 "RETURNING rejected;"
             )
-
             data = ((await GuestUtils.get_upsell())["id"],)
             await cur.execute(query, data)
 
@@ -223,8 +187,6 @@ class GuestUtils:
                 "WHERE id = %s "
                 "RETURNING in_stock > 0 as stock_status;"
             )
-
-
             data = (item_id,)
             await cur.execute(query, data)
 
@@ -243,4 +205,48 @@ class GuestUtils:
             await cur.execute(query, data)
 
             return await GuestUtils.parse_result(cur)
+
+    @staticmethod
+    async def get_status(session_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "SELECT status "
+                "FROM orders "
+                "WHERE id = %s;"
+            )
+
+            data = (session_id,)
+            await cur.execute(query, data)
+
+            return (await GuestUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def set_status(session_id: int, status: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "UPDATE orders "
+                "SET status = %s "
+                "WHERE id = %s;"
+            )
+
+            data = (status, session_id)
+            await cur.execute(query, data)
+
+            return (await GuestUtils.parse_result(cur))[0]
+
+    @staticmethod
+    async def get_order(session_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "SELECT * FROM orders "
+                "WHERE id = %s;"
+            )
+
+            data = (session_id,)
+            await cur.execute(query, data)
+
+            return (await GuestUtils.parse_result(cur))[0]
+
+
+
 
