@@ -14,7 +14,7 @@ WITH (FORMAT csv, HEADER true);
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     total_price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    status INT NOT NULL DEFAULT 1,
+    status INT NOT NULL DEFAULT 1
 );
 
 CREATE TABLE order_items (
@@ -29,7 +29,7 @@ CREATE TABLE order_items (
 CREATE TABLE chats (
     order_id INT NOT NULL,
     message_id SERIAL,
-    message VARCHAR(60) NOT NULL,
+    message VARCHAR(128) NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
 

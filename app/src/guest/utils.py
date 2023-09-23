@@ -61,7 +61,7 @@ class GuestUtils:
 
             data = (session_id, item_id)
             await cur.execute(query, data)
-            await GuestUtils.reduce_stock(item_id)
+            await GuestUtils.reduce_stock(cur, item_id)
             return (await GuestUtils.parse_result(cur))[0]
 
     @staticmethod
@@ -175,36 +175,31 @@ class GuestUtils:
 
 
     @staticmethod
-    async def reduce_stock(item_id: int):
-        async with async_pool.connection() as conn, conn.cursor() as cur:
-
-            query = sql.SQL(
-                "UPDATE menu "
-                "SET in_stock = CASE "
-                "    WHEN in_stock > 0 THEN in_stock - 1 "
-                "    ELSE 0 "
-                "END "
-                "WHERE id = %s "
-                "RETURNING in_stock > 0 as stock_status;"
-            )
-            data = (item_id,)
-            await cur.execute(query, data)
-
-            return (await GuestUtils.parse_result(cur))[0]
+    async def reduce_stock(cur, item_id: int):
+        query = sql.SQL(
+            "UPDATE menu "
+            "SET in_stock = CASE "
+            "    WHEN in_stock > 0 THEN in_stock - 1 "
+            "    ELSE 0 "
+            "END "
+            "WHERE id = %s "
+            "RETURNING in_stock > 0 as stock_status;"
+        )
+        data = (item_id,)
+        await cur.execute(query, data)
+        return
 
     @staticmethod
-    async def increment_stock(item_id: int):
-        async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "UPDATE menu "
-                "SET in_stock = in_stock +1 "
-                "WHERE id = %s;"
-            )
+    async def increment_stock(cur, item_id: int):
+        query = sql.SQL(
+            "UPDATE menu "
+            "SET in_stock = in_stock +1 "
+            "WHERE id = %s;"
+        )
 
-            data = (item_id,)
-            await cur.execute(query, data)
-
-            return await GuestUtils.parse_result(cur)
+        data = (item_id,)
+        await cur.execute(query, data)
+        return
 
     @staticmethod
     async def get_status(session_id: int):
@@ -226,7 +221,8 @@ class GuestUtils:
             query = sql.SQL(
                 "UPDATE orders "
                 "SET status = %s "
-                "WHERE id = %s;"
+                "WHERE id = %s "
+                "RETURNING status;"
             )
 
             data = (status, session_id)

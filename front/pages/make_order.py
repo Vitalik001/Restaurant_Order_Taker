@@ -54,7 +54,7 @@ with st.form("user_input_form", clear_on_submit=True):
         label="user input",
         label_visibility="hidden",
         placeholder="type here",
-        max_chars=20,
+        max_chars=30,
     )
 
     submit_button = st.form_submit_button(label="Submit")
