@@ -137,8 +137,8 @@ class GuestUtils:
     async def ask_upsell():
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query = sql.SQL(
-                "INSERT INTO upsell_stats (upsell_id) "
-                "VALUES (%s) "
+                "INSERT INTO upsell_stats (upsell_id, asked) "
+                "VALUES (%s, 1) "
                 "ON CONFLICT (upsell_id) DO UPDATE "
                 "SET asked = upsell_stats.asked + 1 "
                 "RETURNING asked;"

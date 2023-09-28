@@ -8,12 +8,6 @@ app.include_router(admin, tags=["admin"])
 app.include_router(guest, tags=["guest"])
 
 
-@app.on_event("startup")
-async def startup():
-    # asyncio.create_task(check_async_connections())
-    # connect to db
-    pass
-
 
 @app.get("/", tags=["main page"])
 async def root():

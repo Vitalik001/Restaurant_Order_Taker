@@ -61,7 +61,7 @@ class AdminUtils:
 
             query = sql.SQL(
                 "SELECT "
-                "    COUNT(*) AS questions_asked, "
+                "    SUM(asked) AS asked, "
                 "    SUM(accepted) AS accepted, "
                 "    SUM(rejected) AS rejected, "
                 "    SUM(total_revenue) AS total_upsell_revenue "
