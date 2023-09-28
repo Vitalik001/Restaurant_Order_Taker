@@ -57,33 +57,32 @@ class GuestUtils:
                 "DO UPDATE SET number_of_items = order_items.number_of_items + 1 "
                 "RETURNING number_of_items;"
             )
-
-
             data = (session_id, item_id)
             await cur.execute(query, data)
-            await GuestUtils.reduce_stock(cur, item_id)
-            return (await GuestUtils.parse_result(cur))[0]
+            result = (await GuestUtils.parse_result(cur))[0]
+        await GuestUtils.reduce_stock(item_id)
+        return result
 
     @staticmethod
     async def remove_item(session_id: int, item_id: int):
+        result = []
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query_insert = sql.SQL(
-                "INSERT INTO order_items (order_id, menu_item_id) "
-                "VALUES (%s, %s) "
-                "ON CONFLICT (order_id, menu_item_id) "
-                "DO UPDATE SET number_of_items = GREATEST(order_items.number_of_items - 1, 0) "
+                "UPDATE order_items "
+                "SET number_of_items = GREATEST(order_items.number_of_items - 1, 0) "
+                "WHERE order_id = %s AND menu_item_id = %s "
                 "RETURNING number_of_items;"
             )
 
             data = (session_id, item_id)
             await cur.execute(query_insert, data)
             result = await GuestUtils.parse_result(cur)
-            GuestUtils.increment_stock(item_id)
-            if result and result[0]["number_of_items"] == 0:
-                # If the number_of_items is 0, remove the entry from the table
-                GuestUtils.delete_item(session_id, item_id)
 
-            return result[0] if result else None
+        if result and result[0]["number_of_items"] == 0:
+            # If the number_of_items is 0, remove the entry from the table
+            await GuestUtils.delete_item(session_id, item_id)
+        await GuestUtils.increment_stock(item_id)
+        return result[0] if result else None
 
     @staticmethod
     async def delete_item(session_id: int, item_id: int):
@@ -107,7 +106,8 @@ class GuestUtils:
             query = sql.SQL("SELECT id, in_stock " "FROM menu " "WHERE name = %s " "LIMIT 1;")
             data = (item_name,)
             await cur.execute(query, data)
-            return (await GuestUtils.parse_result(cur))[0]
+            result = await GuestUtils.parse_result(cur)
+            return result[0] if result else None
 
     @staticmethod
     async def get_upsell():
@@ -175,31 +175,33 @@ class GuestUtils:
 
 
     @staticmethod
-    async def reduce_stock(cur, item_id: int):
-        query = sql.SQL(
-            "UPDATE menu "
-            "SET in_stock = CASE "
-            "    WHEN in_stock > 0 THEN in_stock - 1 "
-            "    ELSE 0 "
-            "END "
-            "WHERE id = %s "
-            "RETURNING in_stock > 0 as stock_status;"
-        )
-        data = (item_id,)
-        await cur.execute(query, data)
-        return
+    async def reduce_stock(item_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "UPDATE menu "
+                "SET in_stock = CASE "
+                "    WHEN in_stock > 0 THEN in_stock - 1 "
+                "    ELSE 0 "
+                "END "
+                "WHERE id = %s "
+                "RETURNING in_stock > 0 as stock_status;"
+            )
+            data = (item_id,)
+            await cur.execute(query, data)
+            return
 
     @staticmethod
-    async def increment_stock(cur, item_id: int):
-        query = sql.SQL(
-            "UPDATE menu "
-            "SET in_stock = in_stock +1 "
-            "WHERE id = %s;"
-        )
+    async def increment_stock(item_id: int):
+        async with async_pool.connection() as conn, conn.cursor() as cur:
+            query = sql.SQL(
+                "UPDATE menu "
+                "SET in_stock = in_stock +1 "
+                "WHERE id = %s;"
+            )
 
-        data = (item_id,)
-        await cur.execute(query, data)
-        return
+            data = (item_id,)
+            await cur.execute(query, data)
+            return
 
     @staticmethod
     async def get_status(session_id: int):

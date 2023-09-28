@@ -23,7 +23,7 @@ class AdminUtils:
                 "FROM orders o "
                 "LEFT JOIN order_items oi ON o.id = oi.order_id "
                 "LEFT JOIN menu m ON oi.menu_item_id = m.id "
-                "WHERE o.status = 8 "
+                "WHERE o.status = 6 "
                 "GROUP BY o.id, total_price "
                 "ORDER BY o.id;"
             )
@@ -40,7 +40,7 @@ class AdminUtils:
                 "    SUM(total_price) AS total_revenue, "
                 "    AVG(total_price) AS average_order_price "
                 "FROM orders "
-                "WHERE status = 8;"
+                "WHERE status = 6;"
             )
 
             await cur.execute(query)
