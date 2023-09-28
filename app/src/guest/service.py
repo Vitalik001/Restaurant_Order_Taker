@@ -31,7 +31,7 @@ class GuestService:
             await GuestUtils.save_message(session_id, message)
             return await GuestService.handle_state_5(session_id,message)
         else:
-            return await GuestService.handle_state_6()
+            return GuestService.handle_state_6()
 
 
     @staticmethod
@@ -93,21 +93,22 @@ class GuestService:
             item_name = match.group(2)
             item = await GuestUtils.check_item(item_name)
             if item:
-                if number_of_items:=(await GuestUtils.remove_item(session_id, item["id"]))["number_of_items"] > 0:
+                number_of_items = await GuestUtils.remove_item(session_id, item["id"])
+                if number_of_items is not None and number_of_items["number_of_items"]  >= 0:
                     return await GuestUtils.save_message(
                         session_id,
-                        f"{item_name} was removed. {item_name} left: {number_of_items}."
+                        f"{item_name} was removed. {item_name} left: {number_of_items['number_of_items']}."
                     )
                 else:
                     await GuestUtils.set_status(session_id, 3)
                     return await GuestUtils.save_message(
                         session_id,
-                        f"{item_name} was removed. {item_name} left: 0."
+                        f"You don't have {item_name} in our order"
                     )
 
         elif re.match(r"^that's all(\.?)$", message, re.IGNORECASE):
             await GuestUtils.set_status(session_id, 6)
-            order = GuestUtils.get_order(session_id)
+            order = await GuestUtils.get_order(session_id)
             return await GuestUtils.save_message(
                 session_id,
                 f"Your total is ${order['total_price']}. Thank you and have a nice day!",
@@ -179,7 +180,7 @@ class GuestService:
 
         elif re.match(r"^that's all(\.?)$", message, re.IGNORECASE):
             await GuestUtils.set_status(session_id, 6)
-            order = GuestUtils.get_order(session_id)
+            order = await GuestUtils.get_order(session_id)
             return await GuestUtils.save_message(
                 session_id,
                 f"Your total is ${order['total_price']}. Thank you and have a nice day!",
@@ -187,7 +188,7 @@ class GuestService:
         return await GuestUtils.save_message(session_id, "I don't understand.")
 
     @staticmethod
-    async def handle_state_6():
-        return "Your order is completed"
+    def handle_state_6():
+        return {"message" : "Your order is already completed"}
 
 
