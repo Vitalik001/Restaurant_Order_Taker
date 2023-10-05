@@ -118,7 +118,7 @@ class GuestService:
                 else:
                     await GuestUtils.set_status(session_id, 3)
                     return await GuestUtils.save_message(
-                        session_id, f"You don't have {item_name} in our order"
+                        session_id, f"You don't have {item_name} in your order"
                     )
 
         elif re.match(r"^that's all(\.?)$", message, re.IGNORECASE):

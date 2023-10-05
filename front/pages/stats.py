@@ -49,7 +49,7 @@ bar_chart = (
     alt.Chart(items_df)
     .mark_bar()
     .encode(
-        x=alt.X("number_of_orders:Q", axis=alt.Axis(title="Number of Orders")),
+        x=alt.X("number:Q", axis=alt.Axis(title="Number of Orders")),
         y=alt.Y("name:N", axis=alt.Axis(title="Item Name")),
     )
     .properties(width=500)
