@@ -49,7 +49,6 @@ class GuestUtils:
     @staticmethod
     async def add_item(session_id: int, item_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-
             query = sql.SQL(
                 "INSERT INTO order_items (order_id, menu_item_id) "
                 "VALUES (%s, %s) "
@@ -65,7 +64,6 @@ class GuestUtils:
 
     @staticmethod
     async def remove_item(session_id: int, item_id: int):
-        result = []
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query_insert = sql.SQL(
                 "UPDATE order_items "
@@ -87,7 +85,6 @@ class GuestUtils:
     @staticmethod
     async def delete_item(session_id: int, item_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-
             query_delete = sql.SQL(
                 "DELETE FROM order_items "
                 "WHERE order_id = %s AND menu_item_id = %s "
@@ -103,7 +100,9 @@ class GuestUtils:
     @staticmethod
     async def check_item(item_name: str):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL("SELECT id, in_stock " "FROM menu " "WHERE name = %s " "LIMIT 1;")
+            query = sql.SQL(
+                "SELECT id, in_stock " "FROM menu " "WHERE name = %s " "LIMIT 1;"
+            )
             data = (item_name,)
             await cur.execute(query, data)
             result = await GuestUtils.parse_result(cur)
@@ -173,7 +172,6 @@ class GuestUtils:
             result.append(row_dict)
         return result
 
-
     @staticmethod
     async def reduce_stock(item_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
@@ -194,9 +192,7 @@ class GuestUtils:
     async def increment_stock(item_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query = sql.SQL(
-                "UPDATE menu "
-                "SET in_stock = in_stock +1 "
-                "WHERE id = %s;"
+                "UPDATE menu " "SET in_stock = in_stock +1 " "WHERE id = %s;"
             )
 
             data = (item_id,)
@@ -206,11 +202,7 @@ class GuestUtils:
     @staticmethod
     async def get_status(session_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "SELECT status "
-                "FROM orders "
-                "WHERE id = %s;"
-            )
+            query = sql.SQL("SELECT status " "FROM orders " "WHERE id = %s;")
 
             data = (session_id,)
             await cur.execute(query, data)
@@ -221,10 +213,7 @@ class GuestUtils:
     async def set_status(session_id: int, status: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
             query = sql.SQL(
-                "UPDATE orders "
-                "SET status = %s "
-                "WHERE id = %s "
-                "RETURNING status;"
+                "UPDATE orders " "SET status = %s " "WHERE id = %s " "RETURNING status;"
             )
 
             data = (status, session_id)
@@ -235,16 +224,9 @@ class GuestUtils:
     @staticmethod
     async def get_order(session_id: int):
         async with async_pool.connection() as conn, conn.cursor() as cur:
-            query = sql.SQL(
-                "SELECT * FROM orders "
-                "WHERE id = %s;"
-            )
+            query = sql.SQL("SELECT * FROM orders " "WHERE id = %s;")
 
             data = (session_id,)
             await cur.execute(query, data)
 
             return (await GuestUtils.parse_result(cur))[0]
-
-
-
-

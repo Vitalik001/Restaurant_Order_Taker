@@ -1,4 +1,4 @@
-from app.src.admin.models.menu_item import Menu_item
+from app.src.admin.models import Menu_item
 from app.src.database import get_async_pool
 from psycopg import sql
 
@@ -50,7 +50,7 @@ class AdminUtils:
                 "   JSON_AGG( "
                 "       JSONB_BUILD_OBJECT( "
                 "           'name', m.name, "
-                "           'number_of_orders', m.number_of_orders "
+                "           'number', m.number_of_orders "
                 "       ) ORDER BY m.name "
                 "   ) AS items "
                 "FROM menu m;"
@@ -98,7 +98,6 @@ class AdminUtils:
             data = (item.name, item.type, item.price, item.in_stock)
             await cur.execute(query, data)
             return (await AdminUtils.parse_result(cur))[0]
-
 
     @staticmethod
     async def change_stock(item_id: int, in_stock: int):

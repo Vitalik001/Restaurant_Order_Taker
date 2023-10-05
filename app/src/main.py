@@ -8,7 +8,6 @@ app.include_router(admin, tags=["admin"])
 app.include_router(guest, tags=["guest"])
 
 
-
 @app.get("/", tags=["main page"])
 async def root():
     return "Restaurant order taker"

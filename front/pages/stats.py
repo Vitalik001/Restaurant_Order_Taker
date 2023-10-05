@@ -4,6 +4,7 @@ import pandas as pd
 import altair as alt
 from config import get_settings
 
+from pages.stats_func.visualize_order import visualize_order
 
 settings = get_settings()
 
@@ -56,35 +57,6 @@ bar_chart = (
 with col2:
     st.header("Items Stats")
     st.altair_chart(bar_chart)
-
-
-def visualize_order(order):
-    col1, col2, col3 = st.columns(3)
-
-    with st.container():
-        col1.metric(label="Id", value=order["id"])
-        col2.metric(
-            label="Total Price", value=f'${round(order["total_price"], 2):0.2f}'
-        )
-
-    items_df = pd.DataFrame(order["items"])
-
-    bar_chart = (
-        alt.Chart(items_df)
-        .mark_bar()
-        .encode(
-            x=alt.X("number:Q", axis=alt.Axis(title="Number of Orders")),
-            y=alt.Y("name:N", axis=alt.Axis(title="Item Name")),
-        )
-        .properties(width=300)
-    )
-    with col3:
-        st.header("Order Items")
-        st.altair_chart(bar_chart)
-
-    with st.expander("Chat History"):
-        for message in order["chat"]:
-            st.write(f"- {message}")
 
 
 st.title("Completed Orders:")

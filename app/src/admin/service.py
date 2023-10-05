@@ -1,4 +1,4 @@
-from app.src.admin.models.menu_item import Menu_item
+from app.src.admin.models import Menu_item
 from app.src.admin.utils import AdminUtils
 
 
@@ -22,4 +22,3 @@ class AdminService:
     @staticmethod
     async def get_menu():
         return await AdminUtils.get_menu()
-

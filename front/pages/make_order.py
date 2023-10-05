@@ -2,7 +2,6 @@ import streamlit as st
 from streamlit_chat import message
 import requests
 from config import get_settings
-import re
 
 settings = get_settings()
 
@@ -16,23 +15,13 @@ if "session" not in st.session_state:
     st.session_state.generated = []
     st.session_state["past"] = [""]
 
-with st.expander("Help"):
-    st.markdown("The guest agent can say any of the following messages:")
-    st.markdown(
-        "- **I'd like a(an) X.**: This is said when the guest wants to order a specific item on the menu."
-    )
-    st.markdown(
-        "- **I don't want a(an) X.**: This is said when the guest changes their mind about a previously ordered item."
-    )
-    st.markdown(
-        "- **That's all.**: This is said after the guest has finished ordering."
-    )
-    st.markdown(
-        "- **Yes, please.**: This is said when the guest wants to accept the upsell."
-    )
-    st.markdown(
-        "- **No, thank you.**: This is said when the guest wants to reject the upsell."
-    )
+with st.sidebar:
+    st.markdown("***Possible messages:***")
+    st.markdown("- **I'd like a(an) X.**")
+    st.markdown("- **I don't want a(an) X.**")
+    st.markdown("- **That's all.**")
+    st.markdown("- **Yes, please.**")
+    st.markdown("- **No, thank you.**")
 
 
 def query(payload):
@@ -64,9 +53,7 @@ if not st.session_state.generated:
         f"Restaurant: - {st.session_state.session['message']}"
     )
 
-if (
-    st.session_state.user_input
-):
+if st.session_state.user_input:
     output = query(st.session_state.user_input)
     st.session_state.past.append(f"You: - {st.session_state.user_input}")
     st.session_state.generated.append(f"Restaurant: - {output}")
