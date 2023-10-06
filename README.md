@@ -27,6 +27,9 @@ docker-compose up
 http://localhost:8501/ or http://localhost/docs#
 ```
 
+### Chat logic
+![FSM](fsm.png)
+
 
 ### API description
 ```shell
