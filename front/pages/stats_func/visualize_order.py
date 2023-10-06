@@ -13,7 +13,6 @@ def visualize_order(order):
         )
 
     items_df = pd.DataFrame(order["items"])
-
     bar_chart = (
         alt.Chart(items_df)
         .mark_bar()
